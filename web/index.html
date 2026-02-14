@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f1419">
+  <title>Financial Discipline</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Onboarding -->
+  <main data-screen="onboarding" class="screen screen-onboarding">
+    <div class="onboarding-content">
+      <h1 class="app-title">Financial Discipline</h1>
+      <p class="tagline">Control your burn rate. Survive until the end of the month.</p>
+      <form id="onboarding-form" class="glass form-card">
+        <label>Monthly budget (₽)</label>
+        <input type="text" id="monthly-budget" inputmode="numeric" placeholder="60 000" required>
+        <label>Cycle start</label>
+        <input type="date" id="cycle-start" required>
+        <label>Cycle end</label>
+        <input type="date" id="cycle-end" required>
+        <button type="submit" class="btn-primary">Start Discipline</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Dashboard -->
+  <main data-screen="dashboard" class="screen screen-dashboard">
+    <div class="dashboard-bg"></div>
+    <div class="dashboard-content">
+      <div id="burning-budget-widget" class="burning-widget state-normal">
+        <div class="burning-ring">
+          <div class="burning-inner">
+            <span class="label">Remaining</span>
+            <span id="remaining-value" class="value">0 ₽</span>
+            <span class="label">Allowed today</span>
+            <span id="allowed-today-value" class="value">0 ₽</span>
+            <span class="label today-spent">Spent today</span>
+            <span id="spent-today-value" class="value">0 ₽</span>
+          </div>
+        </div>
+      </div>
+      <div class="actions-row">
+        <button id="btn-add-expense" class="glass btn-action">➕ Add Expense</button>
+        <button id="btn-analytics" class="glass btn-action">📊 Analytics</button>
+        <button id="btn-new-cycle" class="glass btn-action">🔄 New Cycle</button>
+        <button id="btn-emergency" class="glass btn-action btn-warn">⚠️ Emergency</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Budget Death -->
+  <main data-screen="death" class="screen screen-death">
+    <div class="death-content">
+      <div class="death-icon">💀</div>
+      <h2>Budget is dead.</h2>
+      <p id="death-stats">You survived <span id="death-days">0</span> days. Overspent: <span id="death-overspent">0</span> ₽</p>
+      <div class="death-actions">
+        <button id="death-survive" class="glass btn-primary">Survive until end of month</button>
+        <button id="death-new-cycle" class="glass btn-secondary">Start new cycle (defeat recorded)</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Analytics -->
+  <main data-screen="analytics" class="screen screen-analytics">
+    <div class="analytics-header">
+      <button id="analytics-back" class="back-btn">← Back</button>
+      <h2>Analytics</h2>
+    </div>
+    <div class="analytics-content">
+      <div class="glass card">
+        <h3>Spending pace</h3>
+        <svg id="pace-chart" class="pace-chart" viewBox="0 0 280 140" preserveAspectRatio="xMidYMid meet"></svg>
+        <p class="chart-legend"><span class="line-ideal-legend">—</span> Ideal &nbsp; <span class="line-actual-legend">—</span> Actual</p>
+      </div>
+      <div class="glass card">
+        <h3>Discipline index</h3>
+        <p class="discipline-value"><span id="discipline-index-value">0</span>%</p>
+        <div id="discipline-bar" class="discipline-bar" style="--percent: 0%"></div>
+      </div>
+      <div class="glass card">
+        <h3>Expense categories</h3>
+        <div id="analytics-categories" class="categories-list"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Add Expense -->
+  <div id="modal-add-expense" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel glass">
+      <h3>Add Expense</h3>
+      <label>Amount (₽)</label>
+      <input type="text" id="expense-amount" inputmode="numeric" placeholder="0">
+      <label>Category</label>
+      <select id="expense-category">
+        <option value="food">Food</option>
+        <option value="transport">Transport</option>
+        <option value="subscriptions">Subscriptions</option>
+        <option value="other">Other</option>
+      </select>
+      <label>Comment</label>
+      <input type="text" id="expense-comment" placeholder="Optional">
+      <div class="modal-actions">
+        <button id="expense-cancel" class="btn-secondary">Cancel</button>
+        <button id="expense-save" class="btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: New Cycle -->
+  <div id="modal-new-cycle" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel glass">
+      <h3>New Cycle</h3>
+      <p class="modal-hint">Current cycle will be archived.</p>
+      <label>Monthly budget (₽)</label>
+      <input type="text" id="new-cycle-budget" inputmode="numeric" placeholder="60 000">
+      <label>Start date</label>
+      <input type="date" id="new-cycle-start">
+      <label>End date</label>
+      <input type="date" id="new-cycle-end">
+      <div class="modal-actions">
+        <button id="new-cycle-cancel" class="btn-secondary">Cancel</button>
+        <button id="new-cycle-confirm" class="btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Emergency -->
+  <div id="modal-emergency" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel glass">
+      <h3>⚠️ Emergency Mode</h3>
+      <p>Remaining budget: <strong id="emergency-remaining">0 ₽</strong></p>
+      <button id="emergency-decrease" class="btn-secondary">Decrease remaining limit</button>
+      <button id="emergency-increase" class="btn-warn">Increase limit (rule violation)</button>
+      <button id="emergency-close" class="btn-primary">Close</button>
+    </div>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/logic.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
