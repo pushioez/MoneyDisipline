@@ -98,6 +98,57 @@ function getCategoryDistribution(cycle) {
   }));
 }
 
+function getTotalDays(cycle) {
+  const start = parseDate(cycle.startDate);
+  const end = parseDate(cycle.endDate);
+  return Math.ceil((end - start) / (24 * 60 * 60 * 1000)) + 1;
+}
+
+/** Deviation: how much today's spend is over/under daily limit (percentage, e.g. 20 = 20% over) */
+function getDeviationPercent(cycle) {
+  const allowed = getAllowedDaily(cycle);
+  const spent = getSpentToday(cycle);
+  if (allowed <= 0) return spent > 0 ? 100 : 0;
+  return ((spent - allowed) / allowed) * 100;
+}
+
+/** Predicted day (1-based from cycle start) when money runs out at today's spend rate; null if safe. */
+function getRunOutDay(cycle) {
+  const remaining = getRemainingBudget(cycle);
+  const spentToday = getSpentToday(cycle);
+  if (remaining <= 0) return 0;
+  if (spentToday <= 0) return null;
+  const start = parseDate(cycle.startDate);
+  const today = parseDate(new Date().toISOString().slice(0, 10));
+  const dayIndexToday = Math.floor((today - start) / (24 * 60 * 60 * 1000));
+  const daysUntilZero = remaining / spentToday;
+  const runOutDayIndex = dayIndexToday + Math.ceil(daysUntilZero);
+  const totalDays = getTotalDays(cycle);
+  return runOutDayIndex >= totalDays ? null : runOutDayIndex + 1;
+}
+
+/** Days until budget hits zero at today's spend rate */
+function getDaysUntilRunOut(cycle) {
+  const remaining = getRemainingBudget(cycle);
+  const spentToday = getSpentToday(cycle);
+  if (spentToday <= 0) return null;
+  return Math.floor(remaining / spentToday);
+}
+
+/** UI stage: mild | critical | collapse */
+function getStage(cycle) {
+  const remaining = getRemainingBudget(cycle);
+  const remainingPercent = cycle.monthlyBudget > 0 ? (remaining / cycle.monthlyBudget) * 100 : 100;
+  const allowed = getAllowedDaily(cycle);
+  const spentToday = getSpentToday(cycle);
+  const isOverspending = allowed > 0 && spentToday > allowed;
+
+  if (remaining <= 0 || remainingPercent < 5) return 'collapse';
+  if (remainingPercent < 25 || (isOverspending && remainingPercent < 40)) return 'critical';
+  if (isOverspending) return 'mild';
+  return 'stable';
+}
+
 function getDisciplineIndex(cycle) {
   const start = parseDate(cycle.startDate);
   const end = parseDate(cycle.endDate);
@@ -130,6 +181,11 @@ window.FinancialDisciplineLogic = {
   getSpentToday,
   getState,
   getProgressPercent,
+  getDeviationPercent,
+  getRunOutDay,
+  getDaysUntilRunOut,
+  getTotalDays,
+  getStage,
   getIdealPacePoints,
   getActualPacePoints,
   getCategoryDistribution,
